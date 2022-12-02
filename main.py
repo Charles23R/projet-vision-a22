@@ -4,7 +4,7 @@ from threading import Thread, Event
 from media_player import MediaPlayer
 from hand_detection import HandDetection
 
-from events import event_template01, event_template02
+from events import event_template01, event_template02 #, ...
 
 #### EVENTS ####
 ALL_EVENTS = [
