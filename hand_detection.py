@@ -23,9 +23,11 @@ class HandDetection(Thread):
         print("Place your hand inside the green box.")
         self.mainloop()
 
-    def __init__(self, event_queues):
+    def __init__(self, event_queues, debug=True):
         Thread.__init__(self)
         self.event_queues = event_queues
+        #debug mode draws the contour, hull, fingertips and concavities
+        self.debug = debug
         self.start()
     def callback(self) :
         self.__stop = True
@@ -54,9 +56,10 @@ class HandDetection(Thread):
                 hull_hollow = cv.convexHull(contour, returnPoints=False)
 
                 # Draw bunch of stuff
-                cv.drawContours(roi, [contour], 0, (255,255,0), 2)
-                cv.drawContours(roi, [hull], 0, (0, 255, 255), 2)
-                cv.circle(roi, center, 7, (0, 0, 255), -1)
+                if self.debug:
+                    cv.drawContours(roi, [contour], 0, (255,255,0), 2)
+                    cv.drawContours(roi, [hull], 0, (0, 255, 255), 2)
+                    cv.circle(roi, center, 7, (0, 0, 255), -1)
 
                 #Get convexity defects (space between fingers)
                 defects = cv.convexityDefects(contour, hull_hollow)
@@ -64,13 +67,14 @@ class HandDetection(Thread):
                 #count number of fingers
                 count, fingertip_list, concavities_list = self.detect_fingers(defects, contour)
 
-                self.draw_circles(frame, fingertip_list, (0, 255, 0))
-                self.draw_circles(frame, concavities_list, (0, 255, 255))
-                cv.putText(frame, str(count), (0, 50), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0) , 2, cv.LINE_AA)
+                if self.debug:
+                    self.draw_circles(frame, fingertip_list, (0, 255, 0))
+                    self.draw_circles(frame, concavities_list, (0, 255, 255))
+                    cv.putText(frame, str(count), (0, 50), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0) , 2, cv.LINE_AA)
                 
 
                 #### SEND ALL DATA to event threads
-                data = count, center, fingertip_list, concavities_list
+                data = count, center, list(fingertip_list), list(concavities_list)
                 for event_queue in self.event_queues :
                         event_queue.put(data)
 

@@ -4,12 +4,13 @@ from threading import Thread, Event
 from media_player import MediaPlayer
 from hand_detection import HandDetection
 
-from events import event_template01, event_template02 #, ...
+from events import event_template01, event_template02, event_template03 #, ...
 
 #### EVENTS ####
 ALL_EVENTS = [
     event_template01.task,
     event_template02.task,
+    event_template03.task,
     # ...
 ]
 ################

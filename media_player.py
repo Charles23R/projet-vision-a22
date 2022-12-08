@@ -32,9 +32,10 @@ class MediaPlayer(Thread) :
 
         self.window.mainloop()
 
-    def __init__(self):
+    def __init__(self, verbose=False):
         Thread.__init__(self)
         self.is_stopped = False
+        self.verbose=False
         self.start()
     def callback(self) :
         self.is_stopped = True
@@ -105,27 +106,27 @@ class MediaPlayer(Thread) :
         self.affiche.config(text=("%d : %d" % (disp_min,disp_sec)))
 
     def playAgain(self):
-        print(self.filename)
+        if self.verbose: print(self.filename)
         self.videoplayer.play()
     
     def stopVideo(self): # Ferme la video
-        print(self.filename)
+        if self.verbose: print(self.filename)
         self.videoplayer.stop()
         self.videoplayer.destroy()
         self.affiche.destroy()
         self.duree.destroy()
 
     def pauseVideo(self):
-        print(self.filename)
+        if self.verbose: print(self.filename)
         self.videoplayer.pause()
         self.actualiseTps2()
 
     def seekVideo(self, tps): # Aller à un instant tps de la video
-        print(self.filename)
+        if self.verbose: print(self.filename)
         self.videoplayer.seek(int(tps))
 
     def forward(self, tps): #Avancer de tps dans la video
-        print(self.filename)
+        if self.verbose: print(self.filename)
         moment=self.videoplayer.current_duration()
         if self.videoplayer.is_paused() : #On relance la video pour voir le changement
             self.videoplayer.play()
@@ -137,7 +138,7 @@ class MediaPlayer(Thread) :
         self.actualiseTps2()
 
     def originale(self): # Revenir à la taille originale
-        print(self.filename)
+        if self.verbose: print(self.filename)
         self.zooming=1
         informations=self.videoplayer.video_info()
         a=informations['framesize']
@@ -150,7 +151,7 @@ class MediaPlayer(Thread) :
             self.videoplayer.set_size(a)
 
     def sizeVideo(self, a): # Changer la taille de la vidéo pour une valeur fixe (640,520) par exemple
-        print(self.filename)
+        if self.verbose: print(self.filename)
         if self.videoplayer.is_paused() : #On relance la video pour voir le changement
             self.videoplayer.play()
             self.videoplayer.set_size(a)
@@ -159,14 +160,17 @@ class MediaPlayer(Thread) :
         else :
             self.videoplayer.set_size(a)
 
-    def zoom(self, x): # Zoomer dans la vidéo pour multiplier la taille originale
-        print(self.filename)
-        self.zooming*=x
+    def zoom(self, x, relative=True): # Zoomer dans la vidéo pour multiplier la taille originale
+        if self.verbose: print(self.filename)
+        self.zooming = self.zooming * x if relative else x
         informations = self.videoplayer.video_info()
         framesize=informations['framesize']
         new_X=int(self.zooming*framesize[0])
         new_Y=int(self.zooming*framesize[1])
         self.videoplayer.set_size((new_X,new_Y))
+
+    def get_zoom(self):
+        return self.zooming
 
     ## -----------------------------------------------------------
     ## ----------------- Les Boutons -----------------------------
