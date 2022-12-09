@@ -4,6 +4,7 @@ from tkVideoPlayer import TkinterVideo
 
 from threading import Thread
 import time
+import os
 
 
 class MediaPlayer(Thread) :    
@@ -14,7 +15,7 @@ class MediaPlayer(Thread) :
 
         self.window = Tk()
         self.window.title("Media Player for Hand Detection")
-        self.window.geometry("1280x720")
+        self.window.geometry("720x480")
         self.window.configure(bg="white")
 
         self.interface = Frame(self.window) #, width=1900, height=200)
@@ -50,9 +51,11 @@ class MediaPlayer(Thread) :
             self.videoplayer.destroy()
             self.duree.destroy()
 
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, 'avatar.mp4')  
         self.videoplayer = TkinterVideo(master=self.window, scaled=True)
-        self.videoplayer.load(r"/Users/joffreyliagre/Desktop/Projets/Avatar.mp4") #Il faut changer le path 
-        self.filename="/Users/joffreyliagre/Desktop/Projets/Avatar.mp4"
+        self.videoplayer.load(filename) 
+        self.filename=filename
         self.videoplayer.pack(expand=True, fill="both")
         self.videoplayer.play()
         self.videoplayer.bind('<<SecondChanged>>', self.actualiseTps)
