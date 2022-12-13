@@ -57,10 +57,6 @@ class HandDetection(Thread):
             lower = [self.min_blue, self.min_green, self.min_red]
             upper = [self.max_blue, self.max_green, self.max_red]
             mask = self.get_skin_mask(roi, lower=lower, upper=upper)
-            kernel = np.ones((5, 5), np.uint8)
-            img_dilation = cv.dilate(mask, kernel, iterations=1)
-            img_erosion = cv.erode(img_dilation, kernel, iterations=1)
-            mask = img_erosion
 
             try:
                 # Get contour based on mask
