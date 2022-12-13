@@ -17,6 +17,15 @@ class HandDetection(Thread):
         # Define region of interest (ROI) coordinates
         self.top, self.right, self.bottom, self.left = 120, 320, 480, 640
 
+        # initialize mask threshold
+        self.min_blue, self.min_green, self.min_red = 0, 48, 80
+        self.max_blue, self.max_green, self.max_red = 20, 255, 255
+        self.init_trackbars()
+
+        # useful for circle gesture
+        self.circle_buffer = [0] * 20
+        self.circle_index = 0
+
         # define a variable to stop the mainloop
         self.__stop = False
 
@@ -44,7 +53,14 @@ class HandDetection(Thread):
             roi = frame[self.top:self.bottom, self.right:self.left]
 
             # Get HSV based skin mask
-            mask = self.get_skin_mask(roi)
+            self.update_mask_values()
+            lower = [self.min_blue, self.min_green, self.min_red]
+            upper = [self.max_blue, self.max_green, self.max_red]
+            mask = self.get_skin_mask(roi, lower=lower, upper=upper)
+            kernel = np.ones((5, 5), np.uint8)
+            img_dilation = cv.dilate(mask, kernel, iterations=1)
+            img_erosion = cv.erode(img_dilation, kernel, iterations=1)
+            mask = img_erosion
 
             try:
                 # Get contour based on mask
@@ -71,10 +87,36 @@ class HandDetection(Thread):
                     self.draw_circles(frame, fingertip_list, (0, 255, 0))
                     self.draw_circles(frame, concavities_list, (0, 255, 255))
                     cv.putText(frame, str(count), (0, 50), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0) , 2, cv.LINE_AA)
-                
 
+                minDist = 15
+                param1 = 30 #500
+                param2 = 16 #200 #smaller value-> more false circles
+                minRadius = 15
+                maxRadius = 100 #10
+
+                circles = cv.HoughCircles(mask, cv.HOUGH_GRADIENT, 1, minDist, param1=param1, param2=param2, minRadius=minRadius, maxRadius=maxRadius)
+                # If some circle is found
+                n_circles = 0
+                if circles is not None:
+                    # Get the (x, y, r) as integers
+                    circles = np.round(circles[0, :]).astype("int")
+                    # loop over the circles
+                    
+                    for (x, y, r) in circles:
+                        n_circles += 1
+                        img_coord = tuple(map(operator.add, (x, y), (self.right, self.top)))
+                        cv.circle(frame, img_coord, r, (0, 255, 0), 2)
+
+                i = self.circle_index
+                self.circle_buffer[i] = 1 if n_circles == 1 else 0
+                self.circle_index = 0 if i == len(self.circle_buffer)-1 else i + 1
+                
+                circle_gesture = False
+                if self.circle_buffer.count(1) > 10:
+                    circle_gesture = True
+                
                 #### SEND ALL DATA to event threads
-                data = count, center, list(fingertip_list), list(concavities_list)
+                data = count, center, list(fingertip_list), list(concavities_list), circle_gesture
                 for event_queue in self.event_queues :
                         event_queue.put(data)
 
@@ -157,6 +199,41 @@ class HandDetection(Thread):
         for coord in coords:
             img_coord = tuple(map(operator.add, coord, (right, top)))
             cv.circle(frame, img_coord, 4, color, -1)
+
+    def update_mask_values(self):
+        self.min_blue = cv.getTrackbarPos('min_blue', 'Track Bars')
+        self.min_green = cv.getTrackbarPos('min_green', 'Track Bars')
+        self.min_red = cv.getTrackbarPos('min_red', 'Track Bars')
+        
+        self.max_blue = cv.getTrackbarPos('max_blue', 'Track Bars')
+        self.max_green = cv.getTrackbarPos('max_green', 'Track Bars')
+        self.max_red = cv.getTrackbarPos('max_red', 'Track Bars')
+
+    def init_trackbars(self):
+        #empty function
+        def doNothing(x):
+            pass
+
+        #creating a resizable window named Track Bars
+        cv.namedWindow('Track Bars', cv.WINDOW_NORMAL)
+
+        #creating track bars for gathering threshold values of red green and blue
+        cv.createTrackbar('min_blue', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('min_green', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('min_red', 'Track Bars', 0, 255, doNothing)
+
+        cv.createTrackbar('max_blue', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('max_green', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('max_red', 'Track Bars', 0, 255, doNothing)
+
+        cv.setTrackbarPos('min_blue', 'Track Bars', 0)
+        cv.setTrackbarPos('min_green', 'Track Bars', 48)
+        cv.setTrackbarPos('min_red', 'Track Bars', 80)
+
+
+        cv.setTrackbarPos('max_blue', 'Track Bars', 20)
+        cv.setTrackbarPos('max_green', 'Track Bars', 255)
+        cv.setTrackbarPos('max_red', 'Track Bars', 255)
 
     pass
 

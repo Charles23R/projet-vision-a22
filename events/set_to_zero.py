@@ -16,15 +16,18 @@
 import queue
 
 #### put your imports
-from time import time
-
+import time
+import math
+from utils import orientation_of_2_points, in_zooming_treshold
 ####
 
 def task(stop_event, media_player, event_queue):
 
     #### put your variables here
-    open_hand_time = -999 # the last time 5 fingers were seen (initially : never). Reset when pause/play
-    is_playing = True
+    mov_detected_flag = False
+    zoom_started_flag = False
+    start_time = 0
+
     ####
 
     while not stop_event.is_set() :
@@ -32,18 +35,25 @@ def task(stop_event, media_player, event_queue):
             nb_fingers, center, fingertips, concavities, circle_gesture = event_queue.get(timeout = 2)
 
             #### put your code here
-            
-            if nb_fingers == 5:
-                open_hand_time = time()
 
-            if nb_fingers == 0 and time() - open_hand_time < 0.5:
-                if is_playing:
-                    media_player.pauseVideo()
-                    is_playing = False
+            if not mov_detected_flag :
+
+                # if the hand has 4 fingers raised, and they form a circle shape
+                if nb_fingers == 4 and circle_gesture :
+                    mov_detected_flag = True
+                    start_time = time.time()
+            
+            # if the hand has 4 fingers raised, and they form a circle shape
+            else :
+                if nb_fingers != 4 or not circle_gesture:
+                        mov_detected_flag = False
+
                 else:
-                    media_player.playAgain()
-                    is_playing = True
-                open_hand_time = -999 
+                    if time.time() - start_time > 0.5:
+                        media_player.seekVideo(0)
+                        time.sleep(0.1)
+                        media_player.pauseVideo()
+
             ####
 
             event_queue.task_done()
