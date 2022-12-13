@@ -18,8 +18,8 @@ class HandDetection(Thread):
         self.top, self.right, self.bottom, self.left = 120, 320, 480, 640
 
         # initialize mask threshold
-        self.min_blue, self.min_green, self.min_red = 0, 48, 80
-        self.max_blue, self.max_green, self.max_red = 20, 255, 255
+        self.min_hue, self.min_saturation, self.min_value = 0, 48, 80
+        self.max_hue, self.max_saturation, self.max_value = 20, 255, 255
         self.init_trackbars()
 
         # useful for circle gesture
@@ -54,8 +54,8 @@ class HandDetection(Thread):
 
             # Get HSV based skin mask
             self.update_mask_values()
-            lower = [self.min_blue, self.min_green, self.min_red]
-            upper = [self.max_blue, self.max_green, self.max_red]
+            lower = [self.min_hue, self.min_saturation, self.min_value]
+            upper = [self.max_hue, self.max_saturation, self.max_value]
             mask = self.get_skin_mask(roi, lower=lower, upper=upper)
 
             try:
@@ -197,13 +197,13 @@ class HandDetection(Thread):
             cv.circle(frame, img_coord, 4, color, -1)
 
     def update_mask_values(self):
-        self.min_blue = cv.getTrackbarPos('min_blue', 'Track Bars')
-        self.min_green = cv.getTrackbarPos('min_green', 'Track Bars')
-        self.min_red = cv.getTrackbarPos('min_red', 'Track Bars')
+        self.min_hue = cv.getTrackbarPos('min_hue', 'Track Bars')
+        self.min_saturation = cv.getTrackbarPos('min_saturation', 'Track Bars')
+        self.min_value = cv.getTrackbarPos('min_value', 'Track Bars')
         
-        self.max_blue = cv.getTrackbarPos('max_blue', 'Track Bars')
-        self.max_green = cv.getTrackbarPos('max_green', 'Track Bars')
-        self.max_red = cv.getTrackbarPos('max_red', 'Track Bars')
+        self.max_hue = cv.getTrackbarPos('max_hue', 'Track Bars')
+        self.max_saturation = cv.getTrackbarPos('max_saturation', 'Track Bars')
+        self.max_value = cv.getTrackbarPos('max_value', 'Track Bars')
 
     def init_trackbars(self):
         #empty function
@@ -214,22 +214,22 @@ class HandDetection(Thread):
         cv.namedWindow('Track Bars', cv.WINDOW_NORMAL)
 
         #creating track bars for gathering threshold values of red green and blue
-        cv.createTrackbar('min_blue', 'Track Bars', 0, 255, doNothing)
-        cv.createTrackbar('min_green', 'Track Bars', 0, 255, doNothing)
-        cv.createTrackbar('min_red', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('min_hue', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('min_sat', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('min_value', 'Track Bars', 0, 255, doNothing)
 
-        cv.createTrackbar('max_blue', 'Track Bars', 0, 255, doNothing)
-        cv.createTrackbar('max_green', 'Track Bars', 0, 255, doNothing)
-        cv.createTrackbar('max_red', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('max_hue', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('max_sat', 'Track Bars', 0, 255, doNothing)
+        cv.createTrackbar('max_value', 'Track Bars', 0, 255, doNothing)
 
-        cv.setTrackbarPos('min_blue', 'Track Bars', 0)
-        cv.setTrackbarPos('min_green', 'Track Bars', 48)
-        cv.setTrackbarPos('min_red', 'Track Bars', 80)
+        cv.setTrackbarPos('min_hue', 'Track Bars', 0)
+        cv.setTrackbarPos('min_sat', 'Track Bars', 48)
+        cv.setTrackbarPos('min_value', 'Track Bars', 80)
 
 
-        cv.setTrackbarPos('max_blue', 'Track Bars', 20)
-        cv.setTrackbarPos('max_green', 'Track Bars', 255)
-        cv.setTrackbarPos('max_red', 'Track Bars', 255)
+        cv.setTrackbarPos('max_hue', 'Track Bars', 20)
+        cv.setTrackbarPos('max_sat', 'Track Bars', 255)
+        cv.setTrackbarPos('max_value', 'Track Bars', 255)
 
     pass
 
