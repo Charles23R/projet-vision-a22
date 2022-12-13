@@ -134,12 +134,12 @@ class HandDetection(Thread):
     def get_skin_mask(self, img, lower=[0, 48, 80], upper=[20, 255, 255]):
         hsvim = cv.cvtColor(img, cv.COLOR_BGR2HSV)
         skinRegionHSV = cv.inRange(hsvim, np.array(lower), np.array(upper))
-        blurred = cv.blur(skinRegionHSV, (3,3))
-        _,mask = cv.threshold(blurred,0,255,cv.THRESH_BINARY)
+        kernel = np.ones((5,5), np.uint8)
+        mask = cv.dilate(skinRegionHSV, kernel, iterations=1)
         return mask
 
     def get_contour(self, mask):
-        contours,_ = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        contours,_ = cv.findContours(mask, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
         contour = max(contours, key=cv.contourArea)
         return contour
 
