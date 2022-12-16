@@ -4,13 +4,14 @@ from threading import Thread, Event
 from media_player import MediaPlayer
 from hand_detection import HandDetection
 
-from events import pause_play, event_template03, set_to_zero #, ...
+from events import pause_play, event_template03, set_to_zero, event_skip #, ...
 
 #### EVENTS ####
 ALL_EVENTS = [
     pause_play.task,
     event_template03.task,
-    set_to_zero.task
+    set_to_zero.task,
+    event_skip.task,
     # ...
 ]
 ################
@@ -33,7 +34,7 @@ stop_events, event_queues, event_threads = list(zip(*events))
 for event_thread in event_threads : event_thread.start()
 
 # set and start hand_detection
-hand_detection = HandDetection(event_queues)
+hand_detection = HandDetection(event_queues, debug=True)
 
 # stop everything if media_player is stopped
 media_player.join()

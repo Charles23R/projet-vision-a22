@@ -49,7 +49,6 @@ class HandDetection(Thread):
             frame = cv.flip(frame, 1)
 
             # Create region of interest (ROI) highlighted in green in the frame
-            cv.rectangle(frame, (self.left, self.top), (self.right, self.bottom), (0,255,0), 2)
             roi = frame[self.top:self.bottom, self.right:self.left]
 
             # Get HSV based skin mask
@@ -67,22 +66,11 @@ class HandDetection(Thread):
                 hull = cv.convexHull(contour)
                 hull_hollow = cv.convexHull(contour, returnPoints=False)
 
-                # Draw bunch of stuff
-                if self.debug:
-                    cv.drawContours(roi, [contour], 0, (255,255,0), 2)
-                    cv.drawContours(roi, [hull], 0, (0, 255, 255), 2)
-                    cv.circle(roi, center, 7, (0, 0, 255), -1)
-
                 #Get convexity defects (space between fingers)
                 defects = cv.convexityDefects(contour, hull_hollow)
 
                 #count number of fingers
                 count, fingertip_list, concavities_list = self.detect_fingers(defects, contour)
-
-                if self.debug:
-                    self.draw_circles(frame, fingertip_list, (0, 255, 0))
-                    self.draw_circles(frame, concavities_list, (0, 255, 255))
-                    cv.putText(frame, str(count), (0, 50), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0) , 2, cv.LINE_AA)
 
                 minDist = 15
                 param1 = 30 #500
@@ -96,12 +84,7 @@ class HandDetection(Thread):
                 if circles is not None:
                     # Get the (x, y, r) as integers
                     circles = np.round(circles[0, :]).astype("int")
-                    # loop over the circles
-                    
-                    for (x, y, r) in circles:
-                        n_circles += 1
-                        img_coord = tuple(map(operator.add, (x, y), (self.right, self.top)))
-                        cv.circle(frame, img_coord, r, (0, 255, 0), 2)
+                    n_circles = len(circles)
 
                 i = self.circle_index
                 self.circle_buffer[i] = 1 if n_circles == 1 else 0
@@ -115,10 +98,31 @@ class HandDetection(Thread):
                 data = count, center, list(fingertip_list), list(concavities_list), circle_gesture
                 for event_queue in self.event_queues :
                         event_queue.put(data)
+                
+                # Draw bunch of stuff
+                if self.debug:
+
+                    cv.drawContours(roi, [contour], 0, (255,255,0), 2)
+                    cv.drawContours(roi, [hull], 0, (0, 255, 255), 2)
+                    cv.circle(roi, center, 7, (0, 0, 255), -1)
+                    self.draw_circles(frame, fingertip_list, (0, 255, 0))
+                    self.draw_circles(frame, concavities_list, (0, 255, 255))
+                    cv.putText(frame, str(count), (0, 50), cv.FONT_HERSHEY_SIMPLEX,1, (255, 0, 0) , 2, cv.LINE_AA)
+                    
+                    if circles is not None :
+                        # loop over the circles
+                        for (x, y, r) in circles:
+                            img_coord = tuple(map(operator.add, (x, y), (self.right, self.top)))
+                            if self.debug :
+                                cv.circle(frame, img_coord, r, (0, 255, 0), 2)
 
             except ValueError:
                 # If the mask is 100% black, no contours will be found and get_contour will throw a ValueError
                 pass
+
+            # draw ROI
+            cv.rectangle(frame, (self.left, self.top), (self.right, self.bottom), (0,255,0), 2)
+
 
             cv.imshow('frame', frame)
             cv.imshow('mask', mask)
@@ -198,11 +202,11 @@ class HandDetection(Thread):
 
     def update_mask_values(self):
         self.min_hue = cv.getTrackbarPos('min_hue', 'Track Bars')
-        self.min_saturation = cv.getTrackbarPos('min_saturation', 'Track Bars')
+        self.min_saturation = cv.getTrackbarPos('min_sat', 'Track Bars')
         self.min_value = cv.getTrackbarPos('min_value', 'Track Bars')
         
         self.max_hue = cv.getTrackbarPos('max_hue', 'Track Bars')
-        self.max_saturation = cv.getTrackbarPos('max_saturation', 'Track Bars')
+        self.max_saturation = cv.getTrackbarPos('max_sat', 'Track Bars')
         self.max_value = cv.getTrackbarPos('max_value', 'Track Bars')
 
     def init_trackbars(self):
@@ -236,7 +240,7 @@ class HandDetection(Thread):
 
 if __name__ == '__main__': 
 
-    hand_detection = HandDetection()
+    hand_detection = HandDetection([])
 
     import time
     time.sleep(10)

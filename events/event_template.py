@@ -31,7 +31,7 @@ def task(stop_event, media_player, event_queue):
 
     while not stop_event.is_set() :
         try :
-            nb_fingers, center, fingertips, concavities = event_queue.get(timeout = 2)
+            nb_fingers, center, fingertips, concavities, circle_gesture = event_queue.get(timeout = 2)
             #print(nb_fingers, center, fingertips, concavities)
 
             #### put your code here
