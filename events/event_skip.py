@@ -51,6 +51,7 @@ def task(stop_event, media_player, event_queue):
                     first_flag = True
 
                     block_time = 1
+                    difference = 150
             
             # if a skip or a backwards has occured
             elif second_flag :
@@ -69,7 +70,7 @@ def task(stop_event, media_player, event_queue):
                         time_skip = (first_nb_fingers - 1) * 5
                         
                         # skip if difference between start_center and current center is below 100 pixels
-                        if current_finger_x - first_finger_x >= 50 :
+                        if current_finger_x - first_finger_x >= difference :
                             media_player.forward(time_skip)
                             print('skip', str(time_skip) + 's')
 
@@ -78,7 +79,7 @@ def task(stop_event, media_player, event_queue):
                             second_flag = True
                         
                         # backwards if difference between start_center and current center is below 100 pixels
-                        elif first_finger_x - current_finger_x >= 50 :
+                        elif first_finger_x - current_finger_x >= difference :
                             media_player.forward(- time_skip)
                             print('backwards', str(- time_skip) + 's')
 
